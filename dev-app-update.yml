@@ -1,0 +1,3 @@
+provider: generic
+url: https://audiovisualizer.org/auto-updates
+updaterCacheDirName: electron-audiovisualizer-updater

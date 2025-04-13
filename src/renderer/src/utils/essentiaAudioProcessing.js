@@ -18,12 +18,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import { monomix, downsampleArray } from './audioBufferTools.js';
 
-// Initialize Essentia WebAssembly module
+const getResourcePath = (resource) => {
+  // Check if we're in development by looking for Electron's dev flag
+  const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
+  if (isDev) {
+    return `/${resource}`;
+  } else {
+    // In production, resolve paths relative to the app's resources directory
+    return window.electron.ipcRenderer.sendSync('get-resource-path', resource);
+  }
+};
+
 export async function initializeEssentia() {
   if (!window.EssentiaWASM) {
     await new Promise((resolve) => {
       const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/essentia.js@latest/dist/essentia-wasm.web.js';
+      const essentiaBaseUrl = getResourcePath('essentia');
+      const essentiaUrl = `${essentiaBaseUrl}/essentia-wasm.web.js`;
+      script.src = essentiaUrl;
       script.onload = resolve;
       document.head.appendChild(script);
     });

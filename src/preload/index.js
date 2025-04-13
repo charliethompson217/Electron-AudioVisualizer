@@ -16,23 +16,39 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {};
+
+// Extended electron API to ensure sendSync is available
+const extendedElectronAPI = {
+  ...electronAPI,
+  ipcRenderer: {
+    ...electronAPI.ipcRenderer,
+    sendSync: (channel, ...args) => {
+      // Whitelist channels for security
+      const validChannels = ['get-resource-path'];
+      if (validChannels.includes(channel)) {
+        return ipcRenderer.sendSync(channel, ...args);
+      }
+      return null;
+    },
+  },
+};
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld('electron', electronAPI);
+    contextBridge.exposeInMainWorld('electron', extendedElectronAPI);
     contextBridge.exposeInMainWorld('api', api);
   } catch (error) {
     console.error(error);
   }
 } else {
-  window.electron = electronAPI;
+  window.electron = extendedElectronAPI;
   window.api = api;
 }

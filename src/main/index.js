@@ -20,6 +20,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import path from 'path';
 
 function createWindow() {
   // Create the browser window.
@@ -70,6 +71,27 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'));
+
+  // Get resource path
+  ipcMain.on('get-resource-path', (event, resource) => {
+    let resourcePath;
+    const isProduction = app.isPackaged;
+
+    if (isProduction) {
+      // In packaged app, resources are in the extraResources directory at the app root
+      const extraResourcesPath = path.join(process.resourcesPath, resource);
+      resourcePath = extraResourcesPath;
+    } else {
+      // In development, resources are in the public directory
+      resourcePath = path.join(app.getAppPath(), 'public', resource);
+    }
+
+    // Convert to file:// URL for renderer
+    event.returnValue = `file://${resourcePath.replace(/\\/g, '/')}`;
+
+    // Log for debugging
+    console.log(`Resource request: ${resource}, resolved to: ${resourcePath}`);
+  });
 
   createWindow();
 

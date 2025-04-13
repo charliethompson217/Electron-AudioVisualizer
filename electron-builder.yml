@@ -3,13 +3,26 @@ productName: electron-audiovisualizer
 directories:
   buildResources: build
 files:
+  - 'out/**'
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+extraResources:
+  - from: 'public'
+    to: ''
+    filter:
+      - '**/*'
+  - from: 'public/essentia'
+    to: 'essentia'
+  - from: 'public/basic-pitch'
+    to: 'basic-pitch'
 asarUnpack:
   - resources/**
+  - public/**
+  - basic-pitch/**
+  - essentia/**
 win:
   executableName: electron-audiovisualizer
   icon: resources/icon.png

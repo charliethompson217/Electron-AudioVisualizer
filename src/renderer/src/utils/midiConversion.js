@@ -18,12 +18,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import { BasicPitch } from '@spotify/basic-pitch';
 
+const getResourcePath = (resource) => {
+  // Check if we're in development by looking for Electron's dev flag
+  const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
+  if (isDev) {
+    return `/${resource}`;
+  } else {
+    // In production, resolve paths relative to the app's resources directory
+    return window.electron.ipcRenderer.sendSync('get-resource-path', resource);
+  }
+};
+
 let basicPitchModel = null;
 
 async function initializeModel() {
   if (!basicPitchModel) {
     try {
-      basicPitchModel = new BasicPitch('https://audio-visualizer-zongs.s3.us-east-2.amazonaws.com/model/model.json');
+      const modelBaseUrl = getResourcePath('basic-pitch');
+      const modelJsonUrl = `${modelBaseUrl}/model.json`;
+      basicPitchModel = new BasicPitch(modelJsonUrl);
     } catch (error) {
       throw new Error('Failed to load Basic Pitch model: ' + error.message);
     }

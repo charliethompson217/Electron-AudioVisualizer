@@ -26,6 +26,10 @@ asarUnpack:
 win:
   executableName: electron-audiovisualizer
   icon: resources/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

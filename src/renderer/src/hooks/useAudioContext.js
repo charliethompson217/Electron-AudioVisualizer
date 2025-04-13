@@ -56,7 +56,7 @@ export function useAudioContext(mp3File, useMic, isPlaying) {
       setSampleRate(audioContext.sampleRate);
 
       const gainNode = audioContext.createGain();
-      gainNode.gain.value = 0.5;
+      gainNode.gain.value = 0.05;
       gainNodeRef.current = gainNode;
 
       // Connect analyser to GainNode only if not using microphone

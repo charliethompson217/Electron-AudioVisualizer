@@ -128,6 +128,7 @@ export default function CoreApp() {
   const [chromaCircle, setChromaCircle] = useState(true);
   const [chromaLine, setChromaLine] = useState(false);
   const [rms, setRms] = useState(true);
+  const [loudness, setLoudness] = useState(true);
   const [spectralSpreadGraph, setSpectralSpreadGraph] = useState(true);
 
   const [generateBrowserMIDI, setGenerateBrowserMIDI] = useState(true);
@@ -296,6 +297,8 @@ export default function CoreApp() {
           setChromaLine={setChromaLine}
           rms={rms}
           setRms={setRms}
+          loudness={loudness}
+          setLoudness={setLoudness}
           spectralSpreadGraph={spectralSpreadGraph}
           setSpectralSpreadGraph={setSpectralSpreadGraph}
           isPlaying={isPlaying}
@@ -368,6 +371,7 @@ export default function CoreApp() {
           spectralSpreadGraph={spectralSpreadGraph}
           chromaLine={chromaLine}
           rms={rms}
+          loudness={loudness}
           meydaBufferSize={meydaBufferSize}
         />
       )}

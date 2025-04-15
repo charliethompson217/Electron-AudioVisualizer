@@ -35,6 +35,24 @@ const extendedElectronAPI = {
       }
       return null;
     },
+    send: (channel, ...args) => {
+      const validChannels = ['process-python-data-async'];
+      if (validChannels.includes(channel)) {
+        ipcRenderer.send(channel, ...args);
+      }
+    },
+    on: (channel, func) => {
+      const validChannels = ['python-data-result'];
+      if (validChannels.includes(channel)) {
+        ipcRenderer.on(channel, (event, ...args) => func(...args));
+      }
+    },
+    removeListener: (channel, func) => {
+      const validChannels = ['python-data-result'];
+      if (validChannels.includes(channel)) {
+        ipcRenderer.removeListener(channel, func);
+      }
+    },
   },
 };
 

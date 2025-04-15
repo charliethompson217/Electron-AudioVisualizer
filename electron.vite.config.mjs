@@ -25,7 +25,7 @@ export default defineConfig({
         configureServer(server) {
           server.middlewares.use((req, res, next) => {
             const url = req.url || '';
-            if (url.startsWith('/basic-pitch/') || url.startsWith('/essentia/')) {
+            if (url.startsWith('/basic-pitch/') || url.startsWith('/essentia/') || url.startsWith('/workers/')) {
               const filePath = path.join(__dirname, 'public', url);
               if (fs.existsSync(filePath)) {
                 const ext = path.extname(filePath).toLowerCase();

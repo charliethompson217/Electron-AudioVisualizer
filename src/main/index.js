@@ -93,6 +93,26 @@ app.whenReady().then(() => {
     console.log(`Resource request: ${resource}, resolved to: ${resourcePath}`);
   });
 
+  ipcMain.on('process-python-data-async', (event, data) => {
+    const sender = event.sender;
+
+    // Here you would call your Python script
+
+    // For now, just echo back
+    setTimeout(() => {
+      try {
+        if (!sender.isDestroyed()) {
+          console.log('Sending data back to renderer');
+          sender.send('python-data-result', data);
+        } else {
+          console.error('Cannot send result: WebContents was destroyed');
+        }
+      } catch (error) {
+        console.error('Error sending result back to renderer:', error);
+      }
+    }, 10); // Minimal timeout just to simulate
+  });
+
   createWindow();
 
   app.on('activate', function () {

@@ -24,6 +24,7 @@ import { useMidiPlayer } from './useMidiPlayer';
 import { useKeyboardInput } from './useKeyboardInput';
 import { processAudioFileEssentia } from '../utils/essentiaAudioProcessing.js';
 import { convertAudioToMidi } from '../utils/midiConversion.js';
+import { usePythonAnalyzer } from './usePythonAnalyzer';
 
 export function useAudio(
   mp3File,
@@ -59,7 +60,7 @@ export function useAudio(
   const [progress, setProgress] = useState(0);
 
   // Setup audio context and basic audio processing
-  const { audioContext, analyser, sampleRate, duration, play, pause, seek, getCurrentTime } = useAudioContext(
+  const { audioContext, analyser, sampleRate, duration, play, pause, seek, getCurrentTime, source } = useAudioContext(
     mp3File,
     useMic,
     isPlaying
@@ -101,6 +102,8 @@ export function useAudio(
     meydaBufferSize,
     meydaFeaturesToExtract
   );
+
+  const { dataFromPython } = usePythonAnalyzer(audioContext, isPlaying, source);
 
   // Handle MIDI file parsing and playback
   const { midiNotes } = useMidiPlayer(midiFile, synthesizer, isPlaying);
@@ -197,5 +200,6 @@ export function useAudio(
     conversionComplete,
     warning,
     progress,
+    dataFromPython,
   };
 }

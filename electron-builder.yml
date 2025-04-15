@@ -18,11 +18,14 @@ extraResources:
     to: 'essentia'
   - from: 'public/basic-pitch'
     to: 'basic-pitch'
+  - from: 'public/workers'
+    to: 'workers'
 asarUnpack:
   - resources/**
   - public/**
   - basic-pitch/**
   - essentia/**
+  - workers/**
 win:
   executableName: electron-audiovisualizer
   icon: resources/icon.png

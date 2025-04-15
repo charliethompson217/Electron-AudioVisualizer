@@ -164,7 +164,17 @@ export default function CoreApp() {
     meydaFeaturesToExtract
   );
 
-  const { bpm, scaleKey, isProcessing, isConverting, conversionComplete, warning, progress, midiNotes } = audio;
+  const {
+    bpm,
+    scaleKey,
+    isProcessing,
+    isConverting,
+    conversionComplete,
+    warning,
+    progress,
+    midiNotes,
+    dataFromPython,
+  } = audio;
 
   const setWarningMessage = (message) => {
     console.warn(message);

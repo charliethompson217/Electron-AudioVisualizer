@@ -18,6 +18,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import { useRef, useState, useEffect } from 'react';
 import Meyda from 'meyda';
+import { useEssentia } from './useEssentia';
+import { usePythonAnalyzer } from './usePythonAnalyzer';
 
 export function useAudioAnalyzer(
   analyser,
@@ -28,7 +30,11 @@ export function useAudioAnalyzer(
   minDecibels = -100,
   maxDecibels = -30,
   meydaBufferSize = 512,
-  meydaFeaturesToExtract
+  meydaFeaturesToExtract,
+  mp3File,
+  bpmAndKey = true,
+  source,
+  setWarning
 ) {
   const [dataArray, setDataArray] = useState(null);
   const dataArrayRef = useRef(null);
@@ -121,6 +127,17 @@ export function useAudioAnalyzer(
     };
   }, [analyser, audioContext, isPlaying, meydaBufferSize, meydaFeaturesToExtract]);
 
+  const { bpm, scaleKey, isProcessing, essentiaFeatures } = useEssentia(
+    audioContext,
+    isPlaying,
+    mp3File,
+    bpmAndKey,
+    source,
+    setWarning
+  );
+
+  const { dataFromPython } = usePythonAnalyzer(audioContext, isPlaying, source);
+
   return {
     dataArray,
     chroma,
@@ -142,5 +159,10 @@ export function useAudioAnalyzer(
     spectralSkewness,
     spectralSlope,
     zcr,
+    bpm,
+    scaleKey,
+    isProcessing,
+    essentiaFeatures,
+    dataFromPython,
   };
 }

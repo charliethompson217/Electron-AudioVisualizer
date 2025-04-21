@@ -22,9 +22,7 @@ import { useAudioAnalyzer } from './useAudioAnalyzer';
 import { useSynthesizer } from './useSynthesizer';
 import { useMidiPlayer } from './useMidiPlayer';
 import { useKeyboardInput } from './useKeyboardInput';
-import { processAudioFileEssentia } from '../utils/essentiaAudioProcessing.js';
 import { convertAudioToMidi } from '../utils/midiConversion.js';
-import { usePythonAnalyzer } from './usePythonAnalyzer';
 
 export function useAudio(
   mp3File,
@@ -43,31 +41,32 @@ export function useAudio(
   onsetThreshold = 0.3,
   frameThreshold = 0.3,
   minDurationSec = 0.1,
-  meydaFeaturesToExtract
+  meydaFeaturesToExtract,
+  setWarning
 ) {
   const volumeRef = useRef(0.5);
-
-  // States for BPM and key detection
-  const [bpm, setBpm] = useState(null);
-  const [scaleKey, setScaleKey] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const synthRef = useRef(null);
 
   // States for MIDI conversion
   const [convertedMidiNotes, setConvertedMidiNotes] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
   const [conversionComplete, setConversionComplete] = useState(true);
-  const [warning, setWarning] = useState(null);
   const [progress, setProgress] = useState(0);
 
   // Setup audio context and basic audio processing
   const { audioContext, analyser, sampleRate, duration, play, pause, seek, getCurrentTime, source } = useAudioContext(
     mp3File,
     useMic,
-    isPlaying
+    isPlaying,
+    synthRef.current
   );
 
   // Initialize and manage synthesizer
   const synthesizer = useSynthesizer(audioContext, analyser, isPlaying, synthesizerSettings, volumeRef);
+
+  useEffect(() => {
+    synthRef.current = synthesizer;
+  }, [synthesizer]);
 
   // Setup audio analysis with Web Audio API and Meyda
   const {
@@ -91,6 +90,11 @@ export function useAudio(
     spectralSkewness,
     spectralSlope,
     zcr,
+    bpm,
+    scaleKey,
+    isProcessing,
+    essentiaFeatures,
+    dataFromPython,
   } = useAudioAnalyzer(
     analyser,
     audioContext,
@@ -100,13 +104,15 @@ export function useAudio(
     minDecibels,
     maxDecibels,
     meydaBufferSize,
-    meydaFeaturesToExtract
+    meydaFeaturesToExtract,
+    mp3File,
+    bpmAndKey,
+    source,
+    setWarning
   );
 
-  const { dataFromPython } = usePythonAnalyzer(audioContext, isPlaying, source);
-
   // Handle MIDI file parsing and playback
-  const { midiNotes } = useMidiPlayer(midiFile, synthesizer, isPlaying);
+  const { midiNotes } = useMidiPlayer(midiFile, synthesizer, isPlaying, setWarning);
 
   // Handle keyboard input for piano
   const { currentVolume } = useKeyboardInput(synthesizer, isPlaying, pianoEnabled);
@@ -118,26 +124,6 @@ export function useAudio(
     }
   }, [currentVolume]);
 
-  // Process audio for BPM and key when mp3File changes
-  useEffect(() => {
-    if (!mp3File || !bpmAndKey) return;
-
-    const analyzeAudio = async () => {
-      setIsProcessing(true);
-      try {
-        const result = await processAudioFileEssentia(mp3File);
-        setBpm(result.bpm);
-        setScaleKey(result.key);
-      } catch (error) {
-        setWarning(error.message);
-      } finally {
-        setIsProcessing(false);
-      }
-    };
-
-    analyzeAudio();
-  }, [mp3File, bpmAndKey]);
-
   // Convert mp3 to MIDI when mp3File changes
   useEffect(() => {
     if (!mp3File || !generateBrowserMIDI) return;
@@ -145,7 +131,6 @@ export function useAudio(
     const convertMidi = async () => {
       setIsConverting(true);
       setConversionComplete(false);
-      setWarning(null);
 
       try {
         const notes = await convertAudioToMidi(mp3File, setProgress, onsetThreshold, frameThreshold, minDurationSec);
@@ -198,8 +183,8 @@ export function useAudio(
     isProcessing,
     isConverting,
     conversionComplete,
-    warning,
     progress,
+    essentiaFeatures,
     dataFromPython,
   };
 }

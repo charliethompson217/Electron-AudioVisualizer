@@ -165,6 +165,7 @@ h2 {
 
 .control-checkbox {
   margin-left: 10px;
+  cursor: pointer;
 }
 
 .control-button {
@@ -326,5 +327,29 @@ h2 {
 
   .spectrograph-controls {
     justify-content: space-between;
+  }
+}
+
+.responsive-controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.controls-panel,
+.keyboard-panel {
+  width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .responsive-controls-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .controls-panel,
+  .keyboard-panel {
+    flex: 1;
   }
 }

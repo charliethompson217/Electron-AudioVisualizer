@@ -20,7 +20,6 @@ import { useEffect, useState } from 'react';
 
 const getResourcePath = (resource) => {
   const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
-
   if (isDev) {
     return `/${resource}`;
   } else {
@@ -33,31 +32,54 @@ export function usePythonAnalyzer(audioContext, isPlaying, source) {
 
   useEffect(() => {
     if (!isPlaying || !audioContext || !source) return;
+
     const workerBaseUrl = getResourcePath('workers');
     const workerUrl = `${workerBaseUrl}/pythonWorker.js`;
     const pythonWorker = new Worker(workerUrl);
     pythonWorker.postMessage({ type: 'init', sampleRate: audioContext.sampleRate });
     console.log('Renderer: Worker initialized with sample rate:', audioContext.sampleRate);
 
-    const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
-    scriptProcessor.onaudioprocess = (event) => {
-      const inputBuffer = event.inputBuffer;
-      const outputBuffer = event.outputBuffer;
-      for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
-        const inputData = inputBuffer.getChannelData(channel);
-        const outputData = outputBuffer.getChannelData(channel);
-        outputData.set(inputData);
-      }
-      const channelData = inputBuffer.getChannelData(0);
-      const float32Array = new Float32Array(channelData);
-      pythonWorker.postMessage({ type: 'audioChunk', data: float32Array }, [float32Array.buffer]);
-    };
-    source.connect(scriptProcessor);
+    let workletNode = null;
+    let gainNode = null;
 
-    const gainNode = audioContext.createGain();
-    gainNode.gain.value = 0;
-    scriptProcessor.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    const setupWorklet = async () => {
+      try {
+        const workletPath = `${workerBaseUrl}/audio-processor.js`;
+        const response = await fetch(workletPath);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio-processor.js: ${response.statusText}`);
+        }
+        const workletCode = await response.text();
+
+        const blob = new Blob([workletCode], { type: 'application/javascript' });
+        const blobURL = URL.createObjectURL(blob);
+
+        await audioContext.audioWorklet.addModule(blobURL);
+        workletNode = new AudioWorkletNode(audioContext, 'audio-processor');
+
+        workletNode.port.onmessage = (event) => {
+          if (event.data.type === 'audioChunk') {
+            const data = event.data.data.extractedData ? event.data.data.extractedData[0] : event.data.data;
+            pythonWorker.postMessage({ type: 'audioChunk', data }, [data.buffer]);
+          }
+        };
+
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = 0;
+
+        source.connect(workletNode);
+        workletNode.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        URL.revokeObjectURL(blobURL);
+      } catch (error) {
+        console.error('Worklet setup failed:', error.name, error.message, error.stack);
+        pythonWorker.terminate();
+        throw error;
+      }
+    };
+
+    setupWorklet().catch((err) => console.error('Setup worklet error:', err));
 
     pythonWorker.onmessage = (event) => {
       if (event.data.type === 'sendToPython') {

@@ -27,7 +27,7 @@ const getResourcePath = (resource) => {
   }
 };
 
-export function usePythonAnalyzer(audioContext, isPlaying, source) {
+export function usePythonAnalyzer(audioContext, isPlaying, source, bpm, scaleKey, essentiaFeatures) {
   const [dataFromPython, setDataFromPython] = useState();
 
   useEffect(() => {
@@ -38,7 +38,6 @@ export function usePythonAnalyzer(audioContext, isPlaying, source) {
     const pythonWorker = new Worker(workerUrl);
     pythonWorker.postMessage({ type: 'init', sampleRate: audioContext.sampleRate });
     console.log('Renderer: Worker initialized with sample rate:', audioContext.sampleRate);
-
     let workletNode = null;
     let gainNode = null;
 
@@ -84,7 +83,15 @@ export function usePythonAnalyzer(audioContext, isPlaying, source) {
     pythonWorker.onmessage = (event) => {
       if (event.data.type === 'sendToPython') {
         console.log('Renderer: Sending data to Python for processing');
-        window.electron.ipcRenderer.send('process-python-data-async', event.data.data);
+        if (bpm && scaleKey) {
+          event.data.data.bpm = bpm;
+          event.data.data.key = scaleKey;
+        } else if (essentiaFeatures) {
+          event.data.data.bpm = essentiaFeatures.bpm;
+          event.data.data.key = essentiaFeatures.scaleKey;
+        }
+        console.log('Data: ', event.data.data);
+        window.electron.ipcRenderer.send('process-python-data-async', { type: 'audioChunk', data: event.data.data });
       }
     };
 
@@ -97,6 +104,9 @@ export function usePythonAnalyzer(audioContext, isPlaying, source) {
   useEffect(() => {
     const handlePythonResult = (result) => {
       console.log('Renderer: Response from Python processing:', result);
+      if (result.error) {
+        console.error('Python processing error:', result.error);
+      }
       setDataFromPython(result);
     };
 

@@ -19,40 +19,63 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import React from 'react';
 import useMetadataExtractor from '../hooks/useMetadataExtractor';
 
-export default function SongInfo({ currentSongName, isProcessing, bpm, scaleKey, essentiaFeatures, mp3File }) {
+export default function SongInfo({
+  currentSongName,
+  essentiaIsProcessingWholeFile,
+  bpm,
+  scaleKey,
+  essentiaFeatures,
+  mp3File,
+  dataFromPython,
+  isPlaying,
+}) {
   const { metadata, isLoading, error } = useMetadataExtractor(mp3File);
 
   return (
-    <div className="SongTitle" style={{ color: 'white', padding: '20px' }}>
-      {isLoading && <p>Extracting metadata...</p>}
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+    <div
+      className="SongTitle"
+      style={{ padding: '20px', display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '20px' }}
+    >
+      <div style={{ width: '300px' }}>
+        {isLoading && <p>Extracting metadata...</p>}
+        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-      {metadata.title && <h1>{metadata.title}</h1>}
-      {!metadata.title && currentSongName && <h1>{currentSongName}</h1>}
+        {metadata.title && <h1>{metadata.title}</h1>}
+        {!metadata.title && currentSongName && <h1>{currentSongName}</h1>}
 
-      {(metadata.artist || metadata.album) && (
-        <div className="metadata-info">
-          {metadata.artist && <p>Artist: {metadata.artist}</p>}
-          {metadata.album && <p>Album: {metadata.album}</p>}
-        </div>
-      )}
+        {(metadata.artist || metadata.album) && (
+          <div className="metadata-info">
+            {metadata.artist && <p>Artist: {metadata.artist}</p>}
+            {metadata.album && <p>Album: {metadata.album}</p>}
+          </div>
+        )}
 
-      {metadata.coverArt && (
-        <div className="cover-art" style={{ marginTop: '10px' }}>
-          <img src={metadata.coverArt} alt="Album Cover" style={{ maxWidth: '200px', borderRadius: '8px' }} />
-        </div>
-      )}
-
-      {isProcessing && <p>Analyzing audio...</p>}
-
-      <div className="audio-info" style={{ visibility: scaleKey && bpm ? 'visible' : 'hidden', marginTop: '10px' }}>
-        <p>BPM: {Math.round(bpm)}</p>
-        <p>Key: {scaleKey}</p>
+        {metadata.coverArt && (
+          <div className="cover-art" style={{ marginTop: '10px' }}>
+            <img src={metadata.coverArt} alt="Album Cover" style={{ maxWidth: '200px', borderRadius: '8px' }} />
+          </div>
+        )}
       </div>
 
-      <div className="audio-info" style={{ visibility: essentiaFeatures ? 'visible' : 'hidden', marginTop: '10px' }}>
-        <p>Current BPM estimate: {essentiaFeatures ? Math.round(essentiaFeatures.bpm) : 'N/A'}</p>
-        <p>Current Key prediction: {essentiaFeatures ? essentiaFeatures.scaleKey : 'N/A'}</p>
+      <div style={{ width: '300px' }}>
+        {' '}
+        {essentiaIsProcessingWholeFile && <p>Analyzing audio...</p>}
+        <div className="audio-info" style={{ visibility: scaleKey && bpm ? 'visible' : 'hidden', marginTop: '10px' }}>
+          <p>BPM: {Math.round(bpm)}</p>
+          <p>Key: {scaleKey}</p>
+        </div>
+        <div className="audio-info" style={{ visibility: essentiaFeatures ? 'visible' : 'hidden', marginTop: '10px' }}>
+          <p>Current BPM estimate: {essentiaFeatures ? Math.round(essentiaFeatures.bpm) : 'N/A'}</p>
+          <p>Current Key prediction: {essentiaFeatures ? essentiaFeatures.scaleKey : 'N/A'}</p>
+        </div>
+        <div
+          className="audio-info"
+          style={{ visibility: dataFromPython && isPlaying ? 'visible' : 'hidden', marginTop: '10px' }}
+        >
+          <p>Current valence: {dataFromPython ? dataFromPython.valence : 'N/A'}</p>
+          <p>Current arousal: {dataFromPython ? dataFromPython.arousal : 'N/A'}</p>
+          <p>Current emotion: {dataFromPython ? dataFromPython.emotion : 'N/A'}</p>
+        </div>
       </div>
     </div>
   );

@@ -22,8 +22,4 @@ import App from './App';
 import p5 from 'p5';
 
 window.p5 = p5;
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);

@@ -35,6 +35,7 @@ export default function PlaybackControls({
   setMp3File,
   setMidiFile,
   handleStartStopWithMic,
+  essentiaIsProcessingWholeFile,
 }) {
   return (
     <div style={{ display: 'block', overflow: 'visible', height: 'auto' }}>
@@ -71,7 +72,7 @@ export default function PlaybackControls({
         <button
           className="control-button"
           onClick={handleStartStop}
-          disabled={(!conversionComplete && !useMic) || fetchingSong}
+          disabled={(!conversionComplete && !useMic) || fetchingSong || essentiaIsProcessingWholeFile}
         >
           {isPlaying ? 'Stop' : 'Play'}
         </button>

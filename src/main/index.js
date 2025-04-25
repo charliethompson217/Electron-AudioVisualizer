@@ -21,6 +21,11 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import path from 'path';
+const { spawn, execSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+
+let pythonProcess = null;
 
 function createWindow() {
   // Create the browser window.
@@ -96,21 +101,117 @@ app.whenReady().then(() => {
   ipcMain.on('process-python-data-async', (event, data) => {
     const sender = event.sender;
 
-    // Here you would call your Python script
+    if (data.type === 'init' && !pythonProcess) {
+      let pythonExecutable, scriptPath, basePath;
 
-    // For now, just echo back
-    setTimeout(() => {
+      pythonExecutable = process.env.PYTHON_EXECUTABLE || 'python3';
+      scriptPath = path.join(app.getAppPath(), 'resources', 'script.py');
+
       try {
-        if (!sender.isDestroyed()) {
-          console.log('Sending data back to renderer');
-          sender.send('python-data-result', data);
-        } else {
-          console.error('Cannot send result: WebContents was destroyed');
+        const versionOutput = execSync(`"${pythonExecutable}" --version`).toString();
+        if (!versionOutput.includes('Python 3.9')) {
+          const errorMsg = `Python 3.9 is required, but found: ${versionOutput.trim()}. Set PYTHON_EXECUTABLE to the path of a Python 3.9 executable.`;
+          console.error(errorMsg);
+          if (!sender.isDestroyed()) {
+            sender.send('python-data-result', { error: errorMsg });
+          }
+          return;
         }
-      } catch (error) {
-        console.error('Error sending result back to renderer:', error);
+      } catch (err) {
+        const errorMsg = `Failed to verify Python version. Ensure ${pythonExecutable} is a valid Python 3.9 executable or set PYTHON_EXECUTABLE. Error: ${err.message}`;
+        console.error(errorMsg);
+        if (!sender.isDestroyed()) {
+          sender.send('python-data-result', { error: errorMsg });
+        }
+        return;
       }
-    }, 10); // Minimal timeout just to simulate
+
+      if (!fs.existsSync(scriptPath)) {
+        console.error(`Python script not found at: ${scriptPath}`);
+        if (!sender.isDestroyed()) {
+          sender.send('python-data-result', {
+            error: `Python script not found at ${scriptPath}`,
+          });
+        }
+        return;
+      }
+
+      const env = { ...process.env };
+
+      console.log(`Spawning Python process: ${pythonExecutable} ${scriptPath}`);
+
+      pythonProcess = spawn(pythonExecutable, [scriptPath], {
+        env,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+
+      let output = '';
+      let errorOutput = '';
+
+      pythonProcess.stdout.on('data', (chunk) => {
+        output += chunk.toString();
+        const lines = output.split('\n');
+        output = lines.pop();
+        for (const line of lines) {
+          if (line.trim() && !sender.isDestroyed()) {
+            try {
+              const result = JSON.parse(line);
+              sender.send('python-data-result', result);
+            } catch (e) {
+              sender.send('python-data-result', {
+                error: 'Invalid JSON from Python',
+                output: line,
+              });
+            }
+          }
+        }
+      });
+
+      pythonProcess.stderr.on('data', (chunk) => {
+        errorOutput += chunk.toString();
+        console.error('Python stderr:', chunk.toString());
+      });
+
+      pythonProcess.on('close', (code) => {
+        if (!sender.isDestroyed()) {
+          sender.send('python-data-result', {
+            error: `Python process exited with code ${code}`,
+            errorOutput,
+          });
+        }
+        pythonProcess = null;
+      });
+
+      pythonProcess.on('error', (err) => {
+        if (!sender.isDestroyed()) {
+          sender.send('python-data-result', {
+            error: `Failed to spawn Python process: ${err.message}`,
+          });
+        }
+        console.error('Python process error:', err);
+        pythonProcess = null;
+      });
+    } else if (pythonProcess && data.type == 'audioChunk') {
+      try {
+        if (data.data.samples instanceof Float32Array) {
+          data.data.samples = Array.from(data.data.samples);
+        }
+        const tempFilePath = path.join(os.tmpdir(), `audio_data_${Date.now()}.json`);
+        fs.writeFileSync(tempFilePath, JSON.stringify(data.data));
+        const message = { filePath: tempFilePath };
+        pythonProcess.stdin.write(JSON.stringify(message) + '\n');
+      } catch (err) {
+        if (!sender.isDestroyed()) {
+          sender.send('python-data-result', { error: `Failed to write to Python stdin: ${err.message}` });
+        }
+      }
+    } else if (!pythonProcess && data.type !== 'init') {
+      if (!sender.isDestroyed()) {
+        sender.send('python-data-result', {
+          error: 'Python process not initialized',
+        });
+      }
+    }
   });
 
   createWindow();
@@ -126,6 +227,10 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  if (pythonProcess) {
+    pythonProcess.kill();
+    pythonProcess = null;
+  }
   if (process.platform !== 'darwin') {
     app.quit();
   }

@@ -15,7 +15,8 @@ This application provides advanced audio visualization and synthesis.
     - [Linux](#linux)
   - [2. Clone the Repository](#2-clone-the-repository)
   - [3. Install Dependencies](#3-install-dependencies)
-  - [4. Run the applicaton](#4-run-the-applicaton)
+  - [4. Install Python 3.9 and Set Up Virtual Environment](#4-install-python-39-and-set-up-virtual-environment)
+  - [5. Run the applicaton](#5-run-the-applicaton)
 - [License](#license)
 
 ## Features and Usage
@@ -205,7 +206,105 @@ npm install
 
 This command reads the package.json file and installs all listed dependencies into a node_modules folder.
 
-### 4. Run the applicaton:
+### 4. Install Python 3.9 and Set Up Virtual Environment:
+
+This application requires Python 3.9 specifically for certain functionalities.
+
+#### Windows
+
+1. **Download Python 3.9**:
+
+   - Visit the [Python downloads page](https://www.python.org/downloads/release/python-3913/)
+   - Download the Windows installer (64-bit)
+   - Run the installer, check "Add Python 3.9 to PATH" and click "Install Now"
+
+2. **Create and activate a virtual environment**:
+
+   ```
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+
+3. **Install Python requirements**:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. **Verify Python path**:
+   - If `python3` command doesn't work, set the PYTHON_EXECUTABLE environment variable:
+   ```
+   set PYTHON_EXECUTABLE=C:\Path\to\Python39\python.exe
+   ```
+
+#### macOS
+
+1. **Install Python 3.9 using Homebrew**:
+
+   ```
+   brew update
+   brew install python@3.9
+   ```
+
+2. **Create and activate a virtual environment**:
+
+   ```
+   python3.9 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Python requirements**:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. **Verify Python path**:
+   - If `python3` doesn't point to Python 3.9, set the PYTHON_EXECUTABLE environment variable:
+   ```
+   export PYTHON_EXECUTABLE=/usr/local/bin/python3.9
+   ```
+
+#### Linux
+
+1. **Install Python 3.9**:
+
+   **Debian/Ubuntu**:
+
+   ```
+   sudo apt update
+   sudo apt install software-properties-common
+   sudo add-apt-repository ppa:deadsnakes/ppa
+   sudo apt update
+   sudo apt install python3.9 python3.9-venv python3.9-dev
+   ```
+
+   **Fedora**:
+
+   ```
+   sudo dnf install python3.9
+   ```
+
+2. **Create and activate a virtual environment**:
+
+   ```
+   python3.9 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Python requirements**:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. **Verify Python path**:
+   - If `python3` doesn't point to Python 3.9, set the PYTHON_EXECUTABLE environment variable:
+   ```
+   export PYTHON_EXECUTABLE=/usr/bin/python3.9
+   ```
+
+### 5. Run the applicaton:
 
 Start the application in development mode.
 
@@ -230,7 +329,7 @@ $ npm run build:mac
 $ npm run build:linux
 ```
 
-This outputs a production build to the dist directory
+This outputs a production build to the dist directory (this will not work with python yet)
 
 ## License
 

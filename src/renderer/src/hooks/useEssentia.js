@@ -30,7 +30,7 @@ const getResourcePath = (resource) => {
 export function useEssentia(audioContext, isPlaying, mp3File, bpmAndKey = true, source, setWarning) {
   const [bpm, setBpm] = useState(null);
   const [scaleKey, setScaleKey] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [essentiaIsProcessingWholeFile, setEssentiaIsProcessingWholeFile] = useState(false);
   const [essentiaFeatures, setEssentiaFeatures] = useState(null);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function useEssentia(audioContext, isPlaying, mp3File, bpmAndKey = true, 
 
     const analyzeAudio = async () => {
       try {
-        setIsProcessing(true);
+        setEssentiaIsProcessingWholeFile(true);
         worker = new Worker(`${getResourcePath('workers')}/essentiaWorker.js`);
         const arrayBuffer = await mp3File.arrayBuffer();
         const tempAudioContext = new AudioContext();
@@ -69,7 +69,7 @@ export function useEssentia(audioContext, isPlaying, mp3File, bpmAndKey = true, 
           if (event.data.type === 'fileFeatures') {
             setBpm(event.data.data.bpm);
             setScaleKey(event.data.data.scaleKey);
-            setIsProcessing(false);
+            setEssentiaIsProcessingWholeFile(false);
           }
         };
       } catch (error) {
@@ -78,7 +78,7 @@ export function useEssentia(audioContext, isPlaying, mp3File, bpmAndKey = true, 
         } else {
           setWarning(`Failed to analyze audio: ${error.message}`);
         }
-        setIsProcessing(false);
+        setEssentiaIsProcessingWholeFile(false);
         if (worker) worker.terminate();
       }
     };
@@ -158,7 +158,7 @@ export function useEssentia(audioContext, isPlaying, mp3File, bpmAndKey = true, 
   return {
     bpm,
     scaleKey,
-    isProcessing,
+    essentiaIsProcessingWholeFile,
     essentiaFeatures,
   };
 }

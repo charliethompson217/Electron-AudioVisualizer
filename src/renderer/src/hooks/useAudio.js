@@ -92,7 +92,7 @@ export function useAudio(
     zcr,
     bpm,
     scaleKey,
-    isProcessing,
+    essentiaIsProcessingWholeFile,
     essentiaFeatures,
     dataFromPython,
   } = useAudioAnalyzer(
@@ -180,7 +180,7 @@ export function useAudio(
     zcr,
     bpm,
     scaleKey,
-    isProcessing,
+    essentiaIsProcessingWholeFile,
     isConverting,
     conversionComplete,
     progress,

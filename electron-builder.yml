@@ -20,6 +20,14 @@ extraResources:
     to: 'basic-pitch'
   - from: 'public/workers'
     to: 'workers'
+  - from: ./resources/python
+    to: python
+    filter:
+      - '**/*'
+  - from: ./resources/script.py
+    to: script.py
+  - from: ./resources/model
+    to: model
 asarUnpack:
   - resources/**
   - public/**

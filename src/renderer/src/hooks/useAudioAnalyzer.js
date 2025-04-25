@@ -127,7 +127,7 @@ export function useAudioAnalyzer(
     };
   }, [analyser, audioContext, isPlaying, meydaBufferSize, meydaFeaturesToExtract]);
 
-  const { bpm, scaleKey, isProcessing, essentiaFeatures } = useEssentia(
+  const { bpm, scaleKey, essentiaIsProcessingWholeFile, essentiaFeatures } = useEssentia(
     audioContext,
     isPlaying,
     mp3File,
@@ -136,7 +136,7 @@ export function useAudioAnalyzer(
     setWarning
   );
 
-  const { dataFromPython } = usePythonAnalyzer(audioContext, isPlaying, source);
+  const { dataFromPython } = usePythonAnalyzer(audioContext, isPlaying, source, bpm, scaleKey, essentiaFeatures);
 
   return {
     dataArray,
@@ -161,7 +161,7 @@ export function useAudioAnalyzer(
     zcr,
     bpm,
     scaleKey,
-    isProcessing,
+    essentiaIsProcessingWholeFile,
     essentiaFeatures,
     dataFromPython,
   };

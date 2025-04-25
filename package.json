@@ -28,9 +28,11 @@
     "midi-file-parser": "^1.0.0",
     "music-metadata": "^11.2.1",
     "p5": "^1.11.3",
+    "python-shell": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.0",
+    "three": "^0.175.0",
     "tone": "^15.0.4"
   },
   "devDependencies": {

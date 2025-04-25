@@ -31,8 +31,15 @@ import SongInfo from './components/SongInfo.jsx';
 import Footer from './components/Footer.jsx';
 import BasicPitchSettings from './components/BasicPitchSettings.jsx';
 import MidiSelector from './components/MidiSelector.jsx';
+import CharacterAnimation from './components/visualizers/CharacterAnimation.jsx';
 
 export default function CoreApp() {
+  useEffect(() => {
+    window.electron.ipcRenderer.send('process-python-data-async', {
+      type: 'init',
+    });
+  }, []);
+
   const defaultNoteHues = [0, 25, 45, 75, 110, 166, 190, 210, 240, 270, 300, 330];
 
   const synthesizerPresets = {
@@ -176,7 +183,7 @@ export default function CoreApp() {
   const {
     bpm,
     scaleKey,
-    isProcessing,
+    essentiaIsProcessingWholeFile,
     isConverting,
     conversionComplete,
     progress,
@@ -377,18 +384,24 @@ export default function CoreApp() {
           setMp3File={setMp3File}
           setMidiFile={setMidiFile}
           handleStartStopWithMic={handleStartStopWithMic}
+          essentiaIsProcessingWholeFile={essentiaIsProcessingWholeFile}
         />
 
         {warning && <div>{warning}</div>}
 
-        <SongInfo
-          currentSongName={currentSongName}
-          isProcessing={isProcessing}
-          bpm={bpm}
-          scaleKey={scaleKey}
-          essentiaFeatures={essentiaFeatures}
-          mp3File={mp3File}
-        />
+        <div className="info-animation-container">
+          <SongInfo
+            currentSongName={currentSongName}
+            essentiaIsProcessingWholeFile={essentiaIsProcessingWholeFile}
+            bpm={bpm}
+            scaleKey={scaleKey}
+            essentiaFeatures={essentiaFeatures}
+            mp3File={mp3File}
+            dataFromPython={dataFromPython}
+            isPlaying={isPlaying}
+          />
+          <CharacterAnimation isPlaying={isPlaying} dataFromPython={dataFromPython} />
+        </div>
       </div>
 
       <VisualizersContainer
